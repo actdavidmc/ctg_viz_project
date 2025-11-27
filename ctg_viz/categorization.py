@@ -13,7 +13,7 @@ import numpy as np
 from typing import Dict, List
 
 
-def check_data_completeness_david(df: pd.DataFrame) -> pd.DataFrame:
+def check_data_completeness_davidmaganacelis(df: pd.DataFrame) -> pd.DataFrame:
     """
     Genera un resumen de la completitud y estadísticas de cada columna.
 
@@ -107,7 +107,7 @@ def categorization(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Resumen profesional para reporte.
     """
-    resumen = check_data_completeness_david(df)
+    resumen = check_data_completeness_davidmaganacelis(df)
     clasificacion = clasificar_columnas(df)
 
     resumen["clasificacion"] = "categórica"  # Default
