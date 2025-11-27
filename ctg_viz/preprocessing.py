@@ -59,6 +59,24 @@ def estandarizar_columnas(df: pd.DataFrame) -> pd.DataFrame:
     )
     return df_est
 
+def resolver_duplicados(df: pd.DataFrame) -> pd.DataFrame:
+    """Renombra columnas duplicadas agregando sufijos _1, _2, etc."""
+    df_temp = df.copy()
+    
+    # nuevo listado de columnas
+    nuevas = []
+    contadores = {}
+    
+    for col in df_temp.columns:
+        if col not in contadores:
+            contadores[col] = 0
+            nuevas.append(col)
+        else:
+            contadores[col] += 1
+            nuevas.append(f"{col}_{contadores[col]}")
+    
+    df_temp.columns = nuevas
+    return df_temp
 
 def convertir_tipos(df: pd.DataFrame) -> pd.DataFrame:
     """Convierte los tipos de dato de manera automática.
@@ -69,9 +87,18 @@ def convertir_tipos(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame con tipos convertidos.
     """
-    df_conv = df.copy()
-    return df_conv.convert_dtypes()
+    df = df.astype("object")
 
+    df = df.replace({pd.NA: np.nan})
+    df = df.where(df.notna(), np.nan)
+
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors="ignore")
+
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"], errors="ignore")
+
+    return df
 
 def eliminar_col_nulos(df: pd.DataFrame, threshold: float = 0.2) -> pd.DataFrame:
     """Elimina columnas donde el porcentaje de nulos supera un umbral.
@@ -101,28 +128,35 @@ def imputar_valores(df: pd.DataFrame, metodo: str = "mean", knn_vecinos: int = 5
         pd.DataFrame: DataFrame imputado.
     """
     df_imp = df.copy()
-    col_num = df_imp.select_dtypes(include="number").columns
-    col_cat = df_imp.select_dtypes(exclude="number").columns
 
-    if metodo in ["mean", "median"]:
-        for col in col_num:
-            imp = SimpleImputer(strategy=metodo)
-            df_imp[[col]] = imp.fit_transform(df_imp[[col]])
+    df_imp = df_imp.astype(object).where(df_imp.notna(), np.nan)
 
-    elif metodo == "knn":
-        imp = KNNImputer(n_neighbors=knn_vecinos)
-        df_imp[col_num] = imp.fit_transform(df_imp[col_num])
+    col_num = df_imp.select_dtypes(include=["number"]).columns
+    col_cat = df_imp.select_dtypes(exclude=["number"]).columns
 
-    else:
-        raise ValueError("Método no válido: mean, median, knn")
-
-    # Categóricas → moda
     if len(col_cat) > 0:
-        imp_cat = SimpleImputer(strategy="most_frequent")
-        df_imp[col_cat] = imp_cat.fit_transform(df_imp[col_cat])
+        df_imp[col_cat] = df_imp[col_cat].astype("object")
+
+    if len(col_num) > 0:
+        if metodo == "mean":
+            imp_num = SimpleImputer(strategy="mean")
+        elif metodo == "median":
+            imp_num = SimpleImputer(strategy="median")
+        else:
+            imp_num = SimpleImputer(strategy="mean")
+
+        df_imp[col_num] = imp_num.fit_transform(df_imp[col_num])
+
+    if len(col_cat) > 0:
+        for col in col_cat:
+            modo = df_imp[col].mode(dropna=True)
+            if len(modo) > 0:
+                df_imp[col] = df_imp[col].fillna(modo.iloc[0])
+            else:
+                df_imp[col] = df_imp[col].fillna("Desconocido")
+
 
     return df_imp
-
 
 def outliers_iqr(df: pd.DataFrame) -> Dict[str, pd.Series]:
     """Identifica outliers usando el rango intercuartílico (IQR)."""
@@ -204,6 +238,7 @@ def preprocessing(
     
     df = cargar_archivo(path)
     df = estandarizar_columnas(df)
+    df = resolver_duplicados(df)
     df = convertir_tipos(df)
     df = eliminar_col_nulos(df, threshold_nulos)
     df = imputar_valores(df, metodo=metodo_imputacion)
