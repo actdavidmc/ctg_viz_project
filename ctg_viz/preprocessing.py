@@ -30,6 +30,7 @@ def cargar_archivo(path: str) -> pd.DataFrame:
     Raises:
         ValueError: Si el archivo no puede leerse.
     """
+    path = str(path)
     try:
         if path.endswith(".csv"):
             return pd.read_csv(path)
@@ -95,8 +96,8 @@ def convertir_tipos(df: pd.DataFrame) -> pd.DataFrame:
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors="ignore")
 
-    if "Date" in df.columns:
-        df["Date"] = pd.to_datetime(df["Date"], errors="ignore")
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["Date"], errors="ignore")
 
     return df
 
@@ -184,6 +185,8 @@ def outliers_z(df: pd.DataFrame, umbral: float = 3) -> Dict[str, pd.Series]:
 
     for col in col_num:
         z_val = zscore(df_temp[col], nan_policy="omit")
+        if not isinstance(z_val, pd.Series):
+            z_val = pd.Series(z_val, index=df_temp.index)
         resultados[col] = np.abs(z_val) > umbral
 
     return resultados

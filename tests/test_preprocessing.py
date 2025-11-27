@@ -38,7 +38,7 @@ def test_estandarizar_columnas(df_robusto):
 def test_convertir_tipos(df_robusto):
     df = convertir_tipos(df_robusto)
     assert isinstance(df, pd.DataFrame)
-    assert df["constante"].dtype.name in ("Int64", "int64", "float64")
+    assert df["Constante"].dtype.name in ("Int64", "int64", "float64")
 
 
 def test_eliminar_col_nulos(df_robusto):

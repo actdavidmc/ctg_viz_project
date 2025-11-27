@@ -47,8 +47,8 @@ def check_data_completeness_davidmaganacelis(df: pd.DataFrame) -> pd.DataFrame:
         )
 
     resumen = pd.DataFrame({
-        "n_nulls": df.isna().sum(),
-        "pct_completeness": (1 - df.isna().sum() / len(df)) * 100,
+        "n_nulls": df.isnull().sum(),
+        "pct_completeness": (1 - df.isnull().sum() / len(df)) * 100,
         "dtype": df.dtypes.astype(str)
     })
 
