@@ -6,30 +6,28 @@ from typing import List, Optional
 
 def plot_boxplot(
     df: pd.DataFrame,
-    columnas: Optional[List[str]] = None,
-    hue: Optional[str] = None
+    columna: str,
+    grupo: Optional[str] = None,
+    facet: bool = False
 ) -> None:
-    """Genera boxplots con agrupación opcional.
+    """Genera boxplots individuales o facetados por clase objetivo.
 
     Args:
         df (pd.DataFrame): DataFrame original.
-        columnas (list[str], optional): Columnas numéricas.
-        hue (str, optional): Columna categórica para comparar grupos.
+        columna (str): Variable numérica.
+        grupo (str, optional): Variable categórica para agrupar.
+        facet (bool): Si True, genera un subgráfico por categoría.
     """
-    if columnas is None:
-        columnas = df.select_dtypes(include="number").columns.tolist()
-
-    if len(columnas) > 1:
-        plt.figure(figsize=(10, 6))
-        sns.boxplot(data=df[columnas], orient="h")
-        plt.title("Boxplots de múltiples variables")
-        plt.grid(alpha=0.3)
+    if facet and grupo:
+        g = sns.FacetGrid(df, col=grupo, col_wrap=3)
+        g.map_dataframe(sns.boxplot, y=columna)
+        g.set_titles(col_template="{col_name}")
+        plt.suptitle(f"Boxplot de {columna} por {grupo}", y=1.03)
         plt.show()
         return
 
-    col = columnas[0]
     plt.figure(figsize=(8, 5))
-    sns.boxplot(data=df, x=col, y=hue if hue else None, hue=hue, orient="h")
-    plt.title(f"Boxplot de {col}" + (f" por {hue}" if hue else ""))
+    sns.boxplot(data=df, x=grupo if grupo else None, y=columna, hue=grupo)
+    plt.title(f"Boxplot de {columna}" + (f" por {grupo}" if grupo else ""))
     plt.grid(alpha=0.3)
     plt.show()
