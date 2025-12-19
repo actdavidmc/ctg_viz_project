@@ -97,7 +97,7 @@ def convertir_tipos(df: pd.DataFrame) -> pd.DataFrame:
         df[col] = pd.to_numeric(df[col], errors="ignore")
 
     if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["Date"], errors="ignore")
+        df["date"] = pd.to_datetime(df["date"], errors="ignore")
 
     return df
 
